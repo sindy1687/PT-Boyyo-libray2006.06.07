@@ -45,7 +45,7 @@ class LibrarySystem {
             guestBorrow: false,
             defaultCopies: 1,
             defaultYear: 2024,
-            autoUpdateInterval: 300000,
+            autoUpdateInterval: 600000,
             googleWebAppUrl: '',
             userLoanSettings: [],
             subAdmins: [
@@ -458,12 +458,21 @@ class LibrarySystem {
         this.setupEventListeners();
         this.syncBorrowedPanelForViewport();
         this.syncAppHeaderHeight();
-        
-        // 優先從 Google Sheets 載入最新資料
-        this.autoLoadFromGoogleSheets();
-        
-        // 自動從 Google Sheets 載入線上資料（若已設定同步網址）
-        this.startAutoPull();
+
+        const hasLocalBooks = Array.isArray(this.books) && this.books.length > 0;
+        const hasLocalBorrowed = Array.isArray(this.borrowedBooks) && this.borrowedBooks.length > 0;
+
+        if (!hasLocalBooks && !hasLocalBorrowed) {
+            // 第一次進入時，直接安全下載雲端的書籍清單與借閱清單
+            this.pullFromGoogleSheets({ silent: true, protectEmpty: false, closeModal: false });
+        } else {
+            // 優先從 Google Sheets 載入最新資料
+            this.autoLoadFromGoogleSheets();
+            
+            // 自動從 Google Sheets 載入線上資料（若已設定同步網址）
+            this.startAutoPull();
+        }
+
         this.renderBooks();
         this.renderBorrowedBooks();
         this.updateStats();
@@ -1218,6 +1227,10 @@ class LibrarySystem {
             this.settings = { ...this.settings, ...storedSettings };
         }
 
+        if (!Number.isFinite(this.settings.autoUpdateInterval) || this.settings.autoUpdateInterval < 600000) {
+            this.settings.autoUpdateInterval = 600000;
+        }
+
         if (!this.settings.googleWebAppUrl) {
             this.settings.googleWebAppUrl = this.defaultGoogleWebAppUrl;
         }
@@ -1739,6 +1752,9 @@ class LibrarySystem {
             this.saveData({ skipAutoSync: true });
             this.lastUpdateTime = new Date();
             this.updateLastUpdateDisplay();
+            this.renderBooks();
+            this.renderBorrowedBooks();
+            this.updateStats();
 
             if (this.books.length > 0) {
                 console.log(`成功從 Google Sheets 載入 ${this.books.length} 本書籍`);
