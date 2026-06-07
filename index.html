@@ -1064,9 +1064,6 @@
                 <button class="tab-btn" onclick="library.switchSettingsTab('sub-admin')">
                     <i class="fas fa-user-shield"></i> 副管理者管理
                 </button>
-                <button class="tab-btn" onclick="library.switchSettingsTab('auto-fill')">
-                    <i class="fas fa-magic"></i> 資料補齊
-                </button>
             </div>
 
             <!-- 基本設定標籤頁 -->
@@ -1131,54 +1128,6 @@
 
                     <div id="sub-admin-list">
                         <!-- 副管理者列表將在這裡動態生成 -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- 資料補齊標籤頁 -->
-            <div id="auto-fill-settings" class="tab-content">
-                <div class="auto-fill-management">
-                    <div class="section-header">
-                        <h3><i class="fas fa-magic"></i> 自動補齊書籍空白資料</h3>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="auto-fill-limit">
-                            <i class="fas fa-list-ol"></i> 每次補齊數量：
-                        </label>
-                        <input type="number" id="auto-fill-limit" min="1" max="50" value="10">
-                        <small class="form-help">
-                            <i class="fas fa-info-circle"></i>
-                            建議每次補齊 10-20 本，避免 Google Apps Script 超時
-                        </small>
-                    </div>
-
-                    <div class="form-group">
-                        <label>資料來源順序：</label>
-                        <div class="info-box">
-                            <p>1. Google Books API（優先使用 ISBN 查詢）</p>
-                            <p>2. Open Library API（備用資料來源）</p>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>補齊規則：</label>
-                        <div class="info-box">
-                            <p>✓ 只補空白欄位，不覆蓋已有資料</p>
-                            <p>✓ 不會把封面改成 base64</p>
-                            <p>✓ 不會儲存 #VALUE! 錯誤</p>
-                            <p>✓ 記錄資料來源和查詢時間</p>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-primary" onclick="library.autoFillBookData()">
-                            <i class="fas fa-magic"></i> 開始補齊
-                        </button>
-                    </div>
-
-                    <div id="auto-fill-result" class="result-box" style="display: none;">
-                        <!-- 補齊結果將在這裡顯示 -->
                     </div>
                 </div>
             </div>

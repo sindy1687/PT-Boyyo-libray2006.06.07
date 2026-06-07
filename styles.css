@@ -37,13 +37,13 @@ img, video, svg, canvas {
 .header {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 25px 35px;
-    margin-bottom: 25px;
+    border-radius: 15px;
+    padding: 20px 30px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .header h1 {
@@ -73,17 +73,16 @@ img, video, svg, canvas {
 
 /* 按鈕樣式 */
 .btn {
-    padding: 12px 24px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn,
@@ -103,23 +102,13 @@ input {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-.btn-primary:hover {
-    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    background: linear-gradient(135deg, #48bb78, #38a169);
     color: white;
-    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
-}
-
-.btn-success:hover {
-    box-shadow: 0 6px 25px rgba(72, 187, 120, 0.4);
 }
 
 .btn-info {
@@ -136,23 +125,16 @@ input {
     background: transparent;
     border: 2px solid #667eea;
     color: #667eea;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
 }
 
 .btn-outline:hover {
     background: #667eea;
     color: white;
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
 }
 
 .btn-danger {
     background: linear-gradient(135deg, #f56565, #e53e3e);
     color: white;
-    box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
-}
-
-.btn-danger:hover {
-    box-shadow: 0 6px 25px rgba(245, 101, 101, 0.4);
 }
 
 .btn-small {
@@ -164,10 +146,10 @@ input {
 .control-panel {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 30px;
-    margin-bottom: 25px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .search-section {
@@ -531,10 +513,9 @@ input {
 /* 書籍網格 */
 .books-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 240px));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 20px;
     align-items: stretch;
-    justify-content: start;
     width: 100%;
 }
 
@@ -542,40 +523,20 @@ input {
 @media (max-width: 600px) {
     .books-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
-    }
-
-    .header {
-        padding: 20px 25px;
-        border-radius: 16px;
-    }
-
-    .header h1 {
-        font-size: 1.5rem;
-    }
-
-    .control-panel {
-        padding: 20px;
-        border-radius: 16px;
-    }
-
-    .series-section {
-        padding: 20px;
-        border-radius: 16px;
     }
 }
 
 /* 平板版：一排 2 個 */
 @media (min-width: 601px) and (max-width: 1024px) {
     .books-grid {
-        grid-template-columns: repeat(2, minmax(0, 240px));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 /* 電腦版：自動多欄 */
 @media (min-width: 1025px) {
     .books-grid {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 240px));
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     }
 }
 
@@ -585,27 +546,20 @@ input {
     gap: 15px;
 }
 
-.books-list .book-card {
-    width: 100%;
-    max-width: none;
-}
-
 /* 書籍卡片 */
 .book-card {
     background: white;
-    border-radius: 16px;
+    border-radius: 12px;
     padding: 0;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
     border: 2px solid transparent;
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-width: 0;
     width: 100%;
-    max-width: 240px;
-    justify-self: start;
+    min-width: 0;
     box-sizing: border-box;
 }
 
@@ -649,12 +603,11 @@ input {
 }
 
 .book-content {
-    padding: 18px;
+    padding: 15px;
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 }
 
 /* 類別顏色分類 */
@@ -698,8 +651,8 @@ input {
 }
 
 .book-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.25), 0 0 0 1px rgba(102, 126, 234, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
     border-color: #667eea;
 }
 
@@ -717,13 +670,12 @@ input {
 }
 
 .book-id {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #667eea;
     color: white;
-    padding: 6px 12px;
-    border-radius: 10px;
-    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 /* 類別特定的書碼顏色 */
@@ -775,13 +727,12 @@ input {
 
 /* 類別標籤樣式 */
 .book-genre {
-    padding: 5px 14px;
+    padding: 4px 12px;
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .book-card.genre-繪本 .book-genre {
@@ -819,15 +770,12 @@ input {
     gap: 8px;
     flex-wrap: wrap;
     margin-top: auto;
-    width: 100%;
 }
 
 .book-actions .btn {
-    flex: 1 1 calc(50% - 4px);
-    min-width: 0;
-    max-width: 100%;
+    flex: 1;
+    min-width: 80px;
     text-align: center;
-    justify-content: center;
 }
 
 /* 借閱記錄 */
@@ -3020,9 +2968,9 @@ input {
 .series-section {
     margin-bottom: 32px;
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    padding: 25px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     width: 100%;
     overflow: visible;
 }
@@ -3068,11 +3016,10 @@ input {
 
 .series-books {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 240px));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 20px;
     width: 100%;
     align-items: stretch;
-    justify-content: start;
 }
 
 .series-actions {
@@ -3129,8 +3076,7 @@ input {
 
 .series-more-books .book-card {
     flex-shrink: 0;
-    width: 240px;
-    max-width: 240px;
+    width: 220px;
     scroll-snap-align: start;
 }
 

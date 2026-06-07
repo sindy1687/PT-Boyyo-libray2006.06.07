@@ -14,7 +14,6 @@ class LibrarySystem {
         this.autoSyncMinIntervalMs = 30000;
         this.autoSyncDebounceMs = 1500;
         this.pushNowInFlight = false;
-        this.suspendAutoSync = false;
         this.currentBookType = 'series'; // 預設顯示系列書
         
         // API 節流與重試機制
@@ -45,7 +44,7 @@ class LibrarySystem {
             guestBorrow: false,
             defaultCopies: 1,
             defaultYear: 2024,
-            autoUpdateInterval: 600000,
+            autoUpdateInterval: 300000,
             googleWebAppUrl: '',
             userLoanSettings: [],
             subAdmins: [
@@ -458,27 +457,24 @@ class LibrarySystem {
         this.setupEventListeners();
         this.syncBorrowedPanelForViewport();
         this.syncAppHeaderHeight();
-
-        const hasLocalBooks = Array.isArray(this.books) && this.books.length > 0;
-        const hasLocalBorrowed = Array.isArray(this.borrowedBooks) && this.borrowedBooks.length > 0;
-
-        if (!hasLocalBooks && !hasLocalBorrowed) {
-            // 第一次進入時，直接安全下載雲端的書籍清單與借閱清單
-            this.pullFromGoogleSheets({ silent: true, protectEmpty: false, closeModal: false });
-        } else {
-            // 優先從 Google Sheets 載入最新資料
-            this.autoLoadFromGoogleSheets();
-            
-            // 自動從 Google Sheets 載入線上資料（若已設定同步網址）
-            this.startAutoPull();
-        }
-
+        
+        // 優先從 Google Sheets 載入最新資料
+        this.autoLoadFromGoogleSheets();
+        
+        // 自動從 Google Sheets 載入線上資料（若已設定同步網址）
+        this.startAutoPull();
         this.renderBooks();
         this.renderBorrowedBooks();
         this.updateStats();
         this.updateUserDisplay();
         this.updateAdminControls();
         this.startAutoUpdate();
+        // 每次進入網頁時觸發同步（管理者同步全部；一般使用者同步借閱記錄）
+        try {
+            this.triggerSyncForAction('enter');
+        } catch (e) {
+            console.error('enter sync failed:', e);
+        }
     }
 
     isAdminUser() {
@@ -1227,10 +1223,6 @@ class LibrarySystem {
             this.settings = { ...this.settings, ...storedSettings };
         }
 
-        if (!Number.isFinite(this.settings.autoUpdateInterval) || this.settings.autoUpdateInterval < 600000) {
-            this.settings.autoUpdateInterval = 600000;
-        }
-
         if (!this.settings.googleWebAppUrl) {
             this.settings.googleWebAppUrl = this.defaultGoogleWebAppUrl;
         }
@@ -1265,7 +1257,7 @@ class LibrarySystem {
             createdAt: book.createdAt || new Date(Number(book.addedAt) || Date.now() - index).toISOString()
         }));
 
-        this.saveData({ skipAutoSync: true });
+        this.saveData();
     }
 
     updateBorrowedToggleIcon() {
@@ -1366,7 +1358,7 @@ class LibrarySystem {
             }
 
             // 儲存到本地
-            this.saveData({ skipAutoSync: true });
+            this.saveData();
             
             // 重新渲染介面
             this.renderBooks();
@@ -1459,16 +1451,6 @@ class LibrarySystem {
             return;
         }
 
-        const borrowedBooksToUpload = Array.isArray(this.borrowedBooks)
-            ? this.borrowedBooks.filter(record => record && record.id)
-            : [];
-
-        if (borrowedBooksToUpload.length === 0) {
-            console.log('[borrowed sync] 本機沒有可上傳的借閱記錄，略過同步以避免清空雲端資料');
-            if (!silent) this.showToast('目前沒有借閱記錄可同步，已略過上傳', 'info');
-            return;
-        }
-
         try {
             if (!silent) this.showToast('正在上傳借閱記錄到 Google Sheets...', 'info');
             
@@ -1477,7 +1459,7 @@ class LibrarySystem {
                 body: JSON.stringify({
                     action: 'pushBorrowedBooks',
                     payload: {
-                        borrowedBooks: borrowedBooksToUpload,
+                        borrowedBooks: this.borrowedBooks,
                         userId: this.currentUser?.username || 'anonymous'
                     }
                 })
@@ -1615,12 +1597,21 @@ class LibrarySystem {
             });
             this.books = Array.from(bookMap.values());
 
-            this.setBorrowedBooksFromRemote(data.borrowedBooks);
+            // 如果遠端沒有借閱資料但本機已有資料，保留本機借閱資料
+            if (Array.isArray(data.borrowedBooks) && data.borrowedBooks.length === 0) {
+                if (Array.isArray(this.borrowedBooks) && this.borrowedBooks.length > 0) {
+                    console.log('[pullFromGoogleSheets] 收到空的遠端借閱清單，保留本機借閱資料');
+                } else {
+                    this.borrowedBooks = [];
+                }
+            } else {
+                this.borrowedBooks = data.borrowedBooks;
+            }
 
             if (data.boyouBooks && typeof data.boyouBooks === 'object') {
                 localStorage.setItem('lib_boyou_books_v1', JSON.stringify(data.boyouBooks));
             }
-            this.saveData({ skipAutoSync: true });
+            this.saveData();
             this.renderBooks();
             this.renderBorrowedBooks();
             this.updateStats();
@@ -1736,7 +1727,16 @@ class LibrarySystem {
             });
             this.books = Array.from(bookMap.values());
 
-            this.setBorrowedBooksFromRemote(Array.isArray(data.borrowedBooks) ? data.borrowedBooks : []);
+            // 如果遠端沒有借閱資料但本機已有資料，保留本機借閱資料
+            if (Array.isArray(data.borrowedBooks) && data.borrowedBooks.length === 0) {
+                if (Array.isArray(this.borrowedBooks) && this.borrowedBooks.length > 0) {
+                    console.log('[autoLoadFromGoogleSheets] 收到空的遠端借閱清單，保留本機借閱資料');
+                } else {
+                    this.borrowedBooks = [];
+                }
+            } else {
+                this.borrowedBooks = data.borrowedBooks || [];
+            }
 
             // 處理博幼藏書
             const boyouBooks = data.boyouBooks || {};
@@ -1749,12 +1749,20 @@ class LibrarySystem {
             const remoteVersion = data.version || new Date().toISOString();
             this.updateBookListVersion(remoteVersion);
 
-            this.saveData({ skipAutoSync: true });
+            this.saveData();
             this.lastUpdateTime = new Date();
             this.updateLastUpdateDisplay();
-            this.renderBooks();
-            this.renderBorrowedBooks();
-            this.updateStats();
+            
+            // 若原本本機沒有書籍、此次從雲端成功載入書籍，視為首次匯入，才觸發同步
+            if (!hadLocalBooks && Array.isArray(this.books) && this.books.length > 0) {
+                try {
+                    localStorage.setItem('lib_initial_import_done', '1');
+                    // 使用 action 'addBook' 作為變更類別觸發同步
+                    this.triggerSyncForAction('addBook');
+                } catch (e) {
+                    console.error('首次匯入後觸發同步失敗:', e);
+                }
+            }
 
             if (this.books.length > 0) {
                 console.log(`成功從 Google Sheets 載入 ${this.books.length} 本書籍`);
@@ -1952,7 +1960,7 @@ class LibrarySystem {
         console.log('處理完成，共載入', this.books.length, '本書籍');
         console.log('書籍列表:', this.books);
 
-        this.saveData({ skipAutoSync: true });
+        this.saveData();
 
         if (successCount > 0) {
             console.log(`成功載入 ${successCount} 本書籍`);
@@ -1964,30 +1972,26 @@ class LibrarySystem {
     }
 
     // 儲存資料
-    saveData(options = {}) {
-        const { skipAutoSync = false } = options;
+    saveData() {
         localStorage.setItem('lib_books_v1', JSON.stringify(this.books));
         localStorage.setItem('lib_borrowed_v1', JSON.stringify(this.borrowedBooks));
         localStorage.setItem('lib_users_v1', JSON.stringify(this.users));
         localStorage.setItem('lib_active_user_v1', JSON.stringify(this.currentUser));
         localStorage.setItem('lib_settings_v1', JSON.stringify(this.settings));
         
-        // 不在 saveData 階段自動上傳，避免登入/初始化/下載流程把本機暫存資料直接覆蓋雲端
+        // 自動上傳到 Google Sheets
+        this.autoSyncToGoogleSheets();
     }
 
     // 安全地從遠端資料設定借閱清單：避免遠端空陣列覆蓋本機已有資料
     setBorrowedBooksFromRemote(remoteBorrowed) {
         try {
             if (!Array.isArray(remoteBorrowed)) return;
-            const localBorrowed = Array.isArray(this.borrowedBooks) && this.borrowedBooks.length > 0
-                ? this.borrowedBooks
-                : JSON.parse(localStorage.getItem('lib_borrowed_v1') || '[]');
 
             // 如果遠端沒有任何紀錄但本機已有資料，保留本機資料
             if (remoteBorrowed.length === 0) {
-                if (Array.isArray(localBorrowed) && localBorrowed.length > 0) {
+                if (Array.isArray(this.borrowedBooks) && this.borrowedBooks.length > 0) {
                     console.log('[borrow] 收到空的遠端借閱清單，保留本機借閱資料');
-                    this.borrowedBooks = localBorrowed;
                     return;
                 }
                 this.borrowedBooks = [];
@@ -1996,7 +2000,7 @@ class LibrarySystem {
 
             // 若遠端有資料，合併遠端與本機，避免重複（以 id 為準）
             const map = new Map();
-            (Array.isArray(localBorrowed) ? localBorrowed : []).forEach(b => {
+            (Array.isArray(this.borrowedBooks) ? this.borrowedBooks : []).forEach(b => {
                 if (b && b.id) map.set(b.id, b);
             });
             remoteBorrowed.forEach(rb => {
@@ -2238,7 +2242,7 @@ class LibrarySystem {
             this.currentUser = { username, role };
         }
 
-        this.saveData({ skipAutoSync: true });
+        this.saveData();
         this.updateUserDisplay();
         this.updateAdminControls();
         if (!this.hasAdminAccess()) {
@@ -2257,7 +2261,7 @@ class LibrarySystem {
     // 登出
     logout() {
         this.currentUser = null;
-        this.saveData({ skipAutoSync: true });
+        this.saveData();
         this.updateUserDisplay();
         this.updateAdminControls();
         this.stopAutoUpdate();
@@ -2546,7 +2550,7 @@ class LibrarySystem {
             }
 
             this.books.push(newBook);
-            this.saveData({ skipAutoSync: true });
+            this.saveData();
             // 新增館藏後也自動同步到 Google Sheets
             this.triggerSyncForAction('addBook');
             
@@ -3358,6 +3362,8 @@ class LibrarySystem {
         } else {
             // 單本書區塊
             if (standaloneBooks.length > 0) {
+                const gridClass = isGridView ? 'books-grid' : 'books-list';
+                html += `<div class="${gridClass}" id="standalone-books-grid">`;
                 // 只渲染前 batchSize 本書
                 const booksToRender = standaloneBooks.slice(0, this.virtualScrollState.batchSize);
                 this.virtualScrollState.loadedCount = booksToRender.length;
@@ -3366,6 +3372,7 @@ class LibrarySystem {
                     const isLegacy = originalIndex >= 0 && originalIndex < 1493;
                     return this.createBookCard(book, isLegacy);
                 }).join('');
+                html += '</div>';
 
                 // 如果還有更多書籍，顯示「加載更多」按鈕
                 if (standaloneBooks.length > this.virtualScrollState.loadedCount) {
@@ -3390,7 +3397,7 @@ class LibrarySystem {
         if (this.virtualScrollState.isLoading) return;
         this.virtualScrollState.isLoading = true;
 
-        const container = document.getElementById('books-container');
+        const container = document.getElementById('standalone-books-grid');
         const loadMoreBtn = document.getElementById('load-more-btn');
 
         if (!container || !loadMoreBtn) {
@@ -3545,12 +3552,7 @@ class LibrarySystem {
             return this.createBookCard(book, isLegacy);
         }).join('');
 
-        const loadMoreContainer = loadMoreBtn.parentElement;
-        if (loadMoreContainer && loadMoreContainer.parentElement === container) {
-            loadMoreContainer.insertAdjacentHTML('beforebegin', newBooksHtml);
-        } else {
-            container.insertAdjacentHTML('beforeend', newBooksHtml);
-        }
+        container.insertAdjacentHTML('beforeend', newBooksHtml);
 
         // 更新已加載數量
         this.virtualScrollState.loadedCount += nextBatch.length;
@@ -3800,7 +3802,7 @@ class LibrarySystem {
         const canManageBooks = this.isAdminUser();
 
         return `
-            <div class="book-card genre-${book.genre} ${availableCopies === 0 ? 'borrowed' : ''} ${isMerged ? 'merged' : ''}" data-book-id="${this.escapeHtml(book.id)}">
+            <div class="book-card genre-${book.genre} ${availableCopies === 0 ? 'borrowed' : ''} ${isMerged ? 'merged' : ''}">
                 <div class="book-cover">
                     ${this.isAllowedCoverUrl(book.coverUrl) ? 
                         `<img src="${book.coverUrl}" alt="${book.title}" class="book-cover-img" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -3865,22 +3867,6 @@ class LibrarySystem {
                 </div>
             </div>
         `;
-    }
-
-    refreshBookCardInPlace(book, previousId = null) {
-        const cardSelector = previousId
-            ? `.book-card[data-book-id="${CSS.escape(previousId)}"]`
-            : `.book-card[data-book-id="${CSS.escape(book.id)}"]`;
-        const currentCard = document.querySelector(cardSelector);
-        if (!currentCard) return false;
-
-        const replacement = document.createElement('div');
-        replacement.innerHTML = this.createBookCard(book).trim();
-        const nextCard = replacement.firstElementChild;
-        if (!nextCard) return false;
-
-        currentCard.replaceWith(nextCard);
-        return true;
     }
 
     showEditBookModal(bookId) {
@@ -4430,9 +4416,6 @@ class LibrarySystem {
         e.preventDefault();
         if (!this.requireAdmin('編輯書籍')) return;
 
-        const preservedScrollY = window.scrollY || window.pageYOffset || 0;
-        const preservedScrollX = window.scrollX || window.pageXOffset || 0;
-
         const originalId = (document.getElementById('edit-book-original-id')?.value || '').trim();
         const editIdInput = document.getElementById('edit-book-id');
         const newId = (editIdInput?.value || '').trim().toUpperCase();
@@ -4557,25 +4540,25 @@ class LibrarySystem {
         }
 
         this.saveData();
+        // 若書籍物件有 series 屬性（確實被設為套書），切換至「系列書」分頁
+        try {
+            if (book && book.series) {
+                this.switchBookType('series');
+            }
+        } catch (e) {
+            console.error('切換至系列分頁失敗:', e);
+        }
         // 更新書單版本，讓快取失效
         this.updateBookListVersion();
-
+        
         // 編輯書籍屬於動作變更，才觸發同步
         this.triggerSyncForAction('editBook');
-
-        this.refreshBookCardInPlace(book, originalId);
+        
+        this.renderBooks();
         this.updateStats();
 
         const modal = document.getElementById('edit-book-modal');
         if (modal) modal.style.display = 'none';
-
-        requestAnimationFrame(() => {
-            window.scrollTo({
-                top: preservedScrollY,
-                left: preservedScrollX,
-                behavior: 'auto'
-            });
-        });
         
         const message = newId !== originalId ? 
             `書籍已更新，書碼已從 ${originalId} 變更為 ${newId}` : 
@@ -5074,85 +5057,6 @@ class LibrarySystem {
         // 如果切換到副管理者標籤，渲染副管理者列表
         if (tabName === 'sub-admin') {
             this.renderSubAdminList();
-        }
-    }
-
-    // 自動補齊書籍空白資料
-    async autoFillBookData() {
-        if (!this.requireAdmin('資料補齊')) return;
-
-        const url = this.getGoogleWebAppUrl();
-        if (!url) {
-            this.showToast('請先設定 Google Sheets 同步網址', 'error');
-            return;
-        }
-
-        const limitInput = document.getElementById('auto-fill-limit');
-        const limit = limitInput ? Number(limitInput.value) || 10 : 10;
-
-        const resultBox = document.getElementById('auto-fill-result');
-        if (resultBox) {
-            resultBox.style.display = 'block';
-            resultBox.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> 正在補齊書籍資料...</p>';
-        }
-
-        try {
-            this.showToast('正在補齊書籍資料...', 'info');
-
-            const response = await fetch(url, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'autoFillBookData',
-                    options: { limit }
-                })
-            });
-
-            const result = await response.json().catch(() => null);
-            if (!response.ok || !result || !result.ok) {
-                throw new Error('補齊失敗：' + (result?.error || '未知錯誤'));
-            }
-
-            const data = result.result || {};
-            const message = data.message || '補齊完成';
-
-            this.showToast(message, data.success > 0 ? 'success' : 'warning');
-
-            if (resultBox) {
-                let html = `
-                    <div class="result-summary">
-                        <p><strong>${message}</strong></p>
-                        <ul>
-                            <li>成功補齊：${data.success} 本</li>
-                            <li>跳過：${data.skipped} 本</li>
-                            <li>錯誤：${data.errors} 本</li>
-                        </ul>
-                    </div>
-                `;
-
-                if (data.errorDetails && data.errorDetails.length > 0) {
-                    html += '<div class="error-details"><h4>錯誤詳情：</h4><ul>';
-                    data.errorDetails.forEach(err => {
-                        html += `<li>${err.id || err.title || '未知'}: ${err.error}</li>`;
-                    });
-                    html += '</ul></div>';
-                }
-
-                resultBox.innerHTML = html;
-            }
-
-            // 補齊後重新載入資料
-            if (data.success > 0) {
-                setTimeout(() => {
-                    this.pullFromGoogleSheets({ silent: true });
-                }, 2000);
-            }
-        } catch (error) {
-            console.error('補齊失敗:', error);
-            this.showToast('補齊失敗：' + error.message, 'error');
-
-            if (resultBox) {
-                resultBox.innerHTML = `<p class="error"><i class="fas fa-exclamation-circle"></i> 補齊失敗：${error.message}</p>`;
-            }
         }
     }
 
