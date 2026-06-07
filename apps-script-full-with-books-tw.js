@@ -46,6 +46,13 @@ function doPost(e) {
       return json_({ ok: true, result });
     }
 
+    if (action === 'autoFillBookData') {
+      const options = req.options || {};
+      const limit = Number(options.limit) || 10;
+      const result = autoFillBookData_(limit);
+      return json_({ ok: true, result });
+    }
+
     return json_({ ok: false, error: 'Unknown action' });
   } catch (err) {
     return json_({ ok: false, error: String(err && err.message ? err.message : err) });
@@ -271,6 +278,13 @@ function indexMap_(headerRow) {
     series: map.series ?? 9,
     createdAt: map.createdAt ?? 10,
     bookIds: map.bookIds ?? 11,
+    isbn: map.isbn ?? 12,
+    publisher: map.publisher ?? 13,
+    description: map.description ?? 14,
+    booksUrl: map.booksUrl ?? 15,
+    referenceSource: map.referenceSource ?? 16,
+    affiliateUrl: map.affiliateUrl ?? 17,
+    lastLookupAt: map.lastLookupAt ?? 18,
 
     bookId: map.bookId ?? 1,
     bookTitle: map.bookTitle ?? 2,
@@ -279,4 +293,371 @@ function indexMap_(headerRow) {
     dueDate: map.dueDate ?? 5,
     returnedAt: map.returnedAt ?? 6,
   };
+}
+
+// ===== 自動補齊書籍空白資料 =====
+function autoFillBookData_(limit) {
+  const sh = getSheet_('Books');
+  const lastRow = sh.getLastRow();
+  const lastCol = sh.getLastColumn();
+
+  if (lastRow <= 1) {
+    return { success: 0, skipped: 0, errors: 0, message: '沒有書籍資料' };
+  }
+
+  const values = sh.getRange(1, 1, lastRow, lastCol).getValues();
+  const header = values[0];
+  const idx = indexMap_(header);
+
+  let successCount = 0;
+  let skippedCount = 0;
+  let errorCount = 0;
+  const errors = [];
+
+  // 從第 2 行開始處理
+  for (let i = 1; i < values.length && successCount < limit; i++) {
+    const row = values[i];
+    const id = row[idx.id] || '';
+    const title = row[idx.title] || '';
+
+    if (!id && !title) continue;
+
+    // 檢查是否需要補齊（有空白欄位）
+    const needsFill = !row[idx.author] || !row[idx.coverUrl] || !row[idx.genre] || !row[idx.year] || !row[idx.publisher] || !row[idx.isbn] || !row[idx.description];
+
+    if (!needsFill) {
+      skippedCount++;
+      continue;
+    }
+
+    try {
+      // 優先使用 ISBN 查詢，如果沒有 ISBN 則使用書名
+      const isbn = String(row[idx.isbn] || '').trim();
+      const bookTitle = String(title).trim();
+      const author = String(row[idx.author] || '').trim();
+
+      let bookData = null;
+
+      // 嘗試 Google Books API
+      if (isbn) {
+        bookData = fetchFromGoogleBooksByISBN_(isbn);
+      }
+      if (!bookData && bookTitle) {
+        bookData = fetchFromGoogleBooksByTitle_(bookTitle, author);
+      }
+
+      // 如果 Google Books 沒有結果，嘗試 Open Library
+      if (!bookData && isbn) {
+        bookData = fetchFromOpenLibraryByISBN_(isbn);
+      }
+      if (!bookData && bookTitle) {
+        bookData = fetchFromOpenLibraryByTitle_(bookTitle, author);
+      }
+
+      if (bookData) {
+        // 更新空白欄位，不覆蓋已有資料
+        const updates = [];
+
+        // author
+        if (!row[idx.author] && bookData.author) {
+          updates.push({ col: idx.author + 1, value: bookData.author });
+        }
+
+        // coverUrl
+        if (!row[idx.coverUrl] && bookData.coverUrl) {
+          updates.push({ col: idx.coverUrl + 1, value: bookData.coverUrl });
+          // 同時更新 coverImage
+          updates.push({ col: idx.coverImage + 1, value: '=IMAGE("' + bookData.coverUrl + '")' });
+        }
+
+        // genre
+        if (!row[idx.genre] && bookData.genre) {
+          updates.push({ col: idx.genre + 1, value: bookData.genre });
+        }
+
+        // year
+        if (!row[idx.year] && bookData.year) {
+          updates.push({ col: idx.year + 1, value: Number(bookData.year) });
+        }
+
+        // publisher
+        if (!row[idx.publisher] && bookData.publisher) {
+          updates.push({ col: idx.publisher + 1, value: bookData.publisher });
+        }
+
+        // isbn
+        if (!row[idx.isbn] && bookData.isbn) {
+          updates.push({ col: idx.isbn + 1, value: bookData.isbn });
+        }
+
+        // description
+        if (!row[idx.description] && bookData.description) {
+          updates.push({ col: idx.description + 1, value: bookData.description });
+        }
+
+        // booksUrl
+        if (!row[idx.booksUrl] && bookData.booksUrl) {
+          updates.push({ col: idx.booksUrl + 1, value: bookData.booksUrl });
+        }
+
+        // referenceSource
+        if (!row[idx.referenceSource] && bookData.referenceSource) {
+          updates.push({ col: idx.referenceSource + 1, value: bookData.referenceSource });
+        }
+
+        // affiliateUrl
+        if (!row[idx.affiliateUrl] && bookData.affiliateUrl) {
+          updates.push({ col: idx.affiliateUrl + 1, value: bookData.affiliateUrl });
+        }
+
+        // lastLookupAt
+        updates.push({ col: idx.lastLookupAt + 1, value: new Date().toISOString() });
+
+        // 執行更新
+        if (updates.length > 0) {
+          updates.forEach(update => {
+            sh.getRange(i + 1, update.col).setValue(update.value);
+          });
+          successCount++;
+        } else {
+          skippedCount++;
+        }
+      } else {
+        skippedCount++;
+      }
+    } catch (err) {
+      errorCount++;
+      errors.push({
+        id: id,
+        title: title,
+        error: String(err.message || err)
+      });
+    }
+  }
+
+  return {
+    success: successCount,
+    skipped: skippedCount,
+    errors: errorCount,
+    errorDetails: errors,
+    message: `成功補齊 ${successCount} 本書，跳過 ${skippedCount} 本，錯誤 ${errorCount} 本`
+  };
+}
+
+// ===== Google Books API =====
+function fetchFromGoogleBooksByISBN_(isbn) {
+  const url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + encodeURIComponent(isbn);
+  const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) return null;
+
+  const data = JSON.parse(response.getContentText());
+  if (!data.items || data.items.length === 0) return null;
+
+  const book = data.items[0].volumeInfo;
+  return parseGoogleBookData_(book, 'Google Books (ISBN)');
+}
+
+function fetchFromGoogleBooksByTitle_(title, author) {
+  let query = 'intitle:' + encodeURIComponent(title);
+  if (author) {
+    query += '+inauthor:' + encodeURIComponent(author);
+  }
+  const url = 'https://www.googleapis.com/books/v1/volumes?q=' + query;
+  const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) return null;
+
+  const data = JSON.parse(response.getContentText());
+  if (!data.items || data.items.length === 0) return null;
+
+  const book = data.items[0].volumeInfo;
+  return parseGoogleBookData_(book, 'Google Books (Title)');
+}
+
+function parseGoogleBookData_(book, source) {
+  const result = {
+    author: '',
+    coverUrl: '',
+    genre: '',
+    year: '',
+    publisher: '',
+    isbn: '',
+    description: '',
+    booksUrl: '',
+    referenceSource: source,
+    affiliateUrl: ''
+  };
+
+  // author
+  if (book.authors && book.authors.length > 0) {
+    result.author = book.authors.join(', ');
+  }
+
+  // coverUrl
+  if (book.imageLinks && book.imageLinks.thumbnail) {
+    result.coverUrl = book.imageLinks.thumbnail.replace('http:', 'https:');
+  }
+
+  // genre (categories)
+  if (book.categories && book.categories.length > 0) {
+    result.genre = book.categories[0];
+  }
+
+  // year
+  if (book.publishedDate) {
+    const yearMatch = book.publishedDate.match(/\d{4}/);
+    if (yearMatch) {
+      result.year = yearMatch[0];
+    }
+  }
+
+  // publisher
+  if (book.publisher) {
+    result.publisher = book.publisher;
+  }
+
+  // isbn
+  if (book.industryIdentifiers) {
+    const isbn13 = book.industryIdentifiers.find(id => id.type === 'ISBN_13');
+    const isbn10 = book.industryIdentifiers.find(id => id.type === 'ISBN_10');
+    result.isbn = isbn13 ? isbn13.identifier : (isbn10 ? isbn10.identifier : '');
+  }
+
+  // description
+  if (book.description) {
+    result.description = book.description.replace(/<[^>]*>/g, '').substring(0, 500);
+  }
+
+  // booksUrl
+  if (book.infoLink) {
+    result.booksUrl = book.infoLink;
+  }
+
+  return result;
+}
+
+// ===== Open Library API =====
+function fetchFromOpenLibraryByISBN_(isbn) {
+  const url = 'https://openlibrary.org/api/books?bibkeys=ISBN:' + encodeURIComponent(isbn) + '&format=json&jscmd=data';
+  const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) return null;
+
+  const data = JSON.parse(response.getContentText());
+  const key = 'ISBN:' + isbn;
+  if (!data[key]) return null;
+
+  return parseOpenLibraryData_(data[key], 'Open Library (ISBN)');
+}
+
+function fetchFromOpenLibraryByTitle_(title, author) {
+  const url = 'https://openlibrary.org/search.json?title=' + encodeURIComponent(title) + (author ? '&author=' + encodeURIComponent(author) : '') + '&limit=1';
+  const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) return null;
+
+  const data = JSON.parse(response.getContentText());
+  if (!data.docs || data.docs.length === 0) return null;
+
+  const doc = data.docs[0];
+  const result = {
+    author: '',
+    coverUrl: '',
+    genre: '',
+    year: '',
+    publisher: '',
+    isbn: '',
+    description: '',
+    booksUrl: '',
+    referenceSource: 'Open Library (Title)',
+    affiliateUrl: ''
+  };
+
+  // author
+  if (doc.author_name && doc.author_name.length > 0) {
+    result.author = doc.author_name.join(', ');
+  }
+
+  // coverUrl
+  if (doc.cover_i) {
+    result.coverUrl = 'https://covers.openlibrary.org/b/id/' + doc.cover_i + '-M.jpg';
+  }
+
+  // year
+  if (doc.first_publish_year) {
+    result.year = String(doc.first_publish_year);
+  }
+
+  // publisher
+  if (doc.publisher && doc.publisher.length > 0) {
+    result.publisher = doc.publisher[0];
+  }
+
+  // isbn
+  if (doc.isbn && doc.isbn.length > 0) {
+    result.isbn = doc.isbn[0];
+  }
+
+  // booksUrl
+  if (doc.key) {
+    result.booksUrl = 'https://openlibrary.org' + doc.key;
+  }
+
+  return result;
+}
+
+function parseOpenLibraryData_(book, source) {
+  const result = {
+    author: '',
+    coverUrl: '',
+    genre: '',
+    year: '',
+    publisher: '',
+    isbn: '',
+    description: '',
+    booksUrl: '',
+    referenceSource: source,
+    affiliateUrl: ''
+  };
+
+  // author
+  if (book.authors && book.authors.length > 0) {
+    result.author = book.authors.map(a => a.name).join(', ');
+  }
+
+  // coverUrl
+  if (book.cover) {
+    result.coverUrl = book.cover.medium || book.cover.large || '';
+  }
+
+  // year
+  if (book.publish_date) {
+    const yearMatch = book.publish_date.match(/\d{4}/);
+    if (yearMatch) {
+      result.year = yearMatch[0];
+    }
+  }
+
+  // publisher
+  if (book.publishers && book.publishers.length > 0) {
+    result.publisher = book.publishers[0].name;
+  }
+
+  // isbn
+  if (book.identifiers) {
+    if (book.identifiers.isbn_13) {
+      result.isbn = Array.isArray(book.identifiers.isbn_13) ? book.identifiers.isbn_13[0] : book.identifiers.isbn_13;
+    } else if (book.identifiers.isbn_10) {
+      result.isbn = Array.isArray(book.identifiers.isbn_10) ? book.identifiers.isbn_10[0] : book.identifiers.isbn_10;
+    }
+  }
+
+  // description
+  if (book.notes) {
+    result.description = book.notes.replace(/<[^>]*>/g, '').substring(0, 500);
+  }
+
+  // booksUrl
+  if (book.url) {
+    result.booksUrl = book.url;
+  }
+
+  return result;
 }

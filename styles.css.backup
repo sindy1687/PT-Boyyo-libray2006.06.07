@@ -5,224 +5,6 @@
     box-sizing: border-box;
 }
 
-.hidden {
-    display: none !important;
-}
-
-/* 列表視圖樣式 - 只用於列表視圖 */
-.list-view,
-#listView {
-    width: 100%;
-    max-width: none;
-    min-width: 0;
-    overflow-x: auto;
-    overflow-y: visible;
-    box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.88);
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    border-radius: 20px;
-    padding: 12px;
-}
-
-/* 手機版列表可左右滑 */
-@media (max-width: 600px) {
-    .list-view,
-    #listView {
-        overflow-x: auto;
-        padding: 10px;
-    }
-
-    .book-list-row {
-        min-width: 760px;
-    }
-}
-
-.book-list-row {
-    display: grid;
-    grid-template-columns: 70px 100px minmax(220px, 1.6fr) minmax(120px, 1fr) 90px 120px 160px;
-    gap: 12px;
-    align-items: center;
-    min-width: 900px;
-    width: 100%;
-    padding: 12px 14px;
-    border-radius: 14px;
-    background: #ffffff;
-    box-sizing: border-box;
-    transition: all 0.2s ease;
-}
-
-.book-list-row:hover {
-    background: #f8f9fa;
-    border-color: #cbd5e0;
-    transform: translateX(4px);
-}
-
-.list-cover,
-.book-list-cover {
-    width: 52px;
-    height: 72px;
-    object-fit: contain;
-    object-position: center;
-    border-radius: 8px;
-    background: #f8fafc;
-    flex-shrink: 0;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.list-cover img,
-.book-list-cover img {
-    width: auto;
-    height: 100%;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    object-position: center;
-    display: block;
-}
-
-.list-cover-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #f8f9ff, #ffffff);
-    color: #667eea;
-    font-size: 1.5rem;
-}
-
-.list-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.list-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #2d3748;
-    margin: 0;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
-    line-height: 1.4;
-}
-
-.list-meta {
-    font-size: 0.85rem;
-    color: #718096;
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.list-meta span {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.list-actions {
-    flex-shrink: 0;
-    display: flex;
-    gap: 8px;
-}
-
-.list-actions .btn {
-    padding: 8px 16px;
-    font-size: 0.85rem;
-}
-
-/* 系列書列表樣式 */
-.series-section-list {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.series-header-list {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.series-header-list .series-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #2d3748;
-    margin: 0;
-}
-
-.series-header-list .series-count {
-    font-size: 0.9rem;
-    color: #718096;
-}
-
-.series-books-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.standalone-section-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-/* 列表視圖欄位樣式 */
-.list-book-code {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #2d3748;
-}
-
-.list-book-title {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.list-book-title strong {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #2d3748;
-}
-
-.list-book-title span {
-    font-size: 0.85rem;
-    color: #718096;
-}
-
-.list-book-genre {
-    font-size: 0.85rem;
-    color: #718096;
-}
-
-.list-book-year {
-    font-size: 0.85rem;
-    color: #718096;
-}
-
-.list-book-stock {
-    font-size: 0.85rem;
-    color: #718096;
-}
-
-.list-book-actions {
-    display: flex;
-    gap: 8px;
-}
-
 body {
     font-family: 'Microsoft JhengHei', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -747,81 +529,20 @@ input {
     border-color: #667eea;
 }
 
-/* 書籍網格 - 只用於網格視圖 */
-.books-grid,
-.grid-view,
-#gridView {
+/* 書籍網格 */
+.books-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 260px));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 20px;
-    align-items: start;
-    justify-content: start;
+    align-items: stretch;
     width: 100%;
-    overflow: visible;
 }
 
-/* 手機版網格：一排 1 個 */
+/* 手機版：一排一個 */
 @media (max-width: 600px) {
-    .books-grid,
-    .grid-view,
-    #gridView {
+    .books-grid {
         grid-template-columns: 1fr;
-        gap: 14px;
-    }
-
-    #gridView .book-card {
-        max-width: none;
-        width: 100%;
-        padding: 14px;
-    }
-
-    .book-cover {
-        height: 210px;
-        max-height: 210px;
-        aspect-ratio: 3 / 4;
-    }
-
-    .book-cover-img {
-        width: auto;
-        height: 100%;
-        max-width: 100%;
-        object-fit: contain;
-    }
-
-    .book-title {
-        font-size: 17px;
-        line-height: 1.4;
-        min-height: auto;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-    }
-
-    .book-meta {
-        font-size: 14px;
-        line-height: 1.45;
-    }
-
-    .book-code,
-    .genre-badge,
-    .book-genre {
-        font-size: 13px;
-        padding: 6px 10px;
-    }
-
-    .borrow-btn,
-    .btn-borrow {
-        min-height: 42px;
-        font-size: 15px;
-    }
-
-    .series-book-cover {
-        width: 68px;
-        height: 92px;
-    }
-
-    .book-list-cover {
-        width: 48px;
-        height: 66px;
+        gap: 16px;
     }
 
     .header {
@@ -844,27 +565,32 @@ input {
     }
 }
 
-/* 平板版網格：一排 2 個 */
+/* 平板版：一排 2 個，填滿整行 */
 @media (min-width: 601px) and (max-width: 1024px) {
-    .books-grid,
-    .grid-view,
-    #gridView {
+    .books-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-/* 電腦版網格：固定 4 欄 */
+/* 電腦版：固定 4 欄 */
 @media (min-width: 1025px) {
-    .books-grid,
-    .grid-view,
-    #gridView {
+    .books-grid {
         grid-template-columns: repeat(4, 1fr);
         gap: 12px;
         max-width: 100%;
     }
 }
 
-/* 移除舊的 .books-list，改用 .list-view 和 #listView */
+.books-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.books-list .book-card {
+    width: 100%;
+    max-width: none;
+}
 
 /* 書籍卡片 */
 .book-card {
@@ -875,7 +601,7 @@ input {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 2px solid transparent;
     position: relative;
-    overflow: visible;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -888,9 +614,7 @@ input {
 
 .book-cover {
     width: 100%;
-    height: 210px;
-    max-height: 210px;
-    aspect-ratio: 3 / 4;
+    height: 180px;
     background: #f8f9fa;
     display: flex;
     align-items: center;
@@ -898,19 +622,14 @@ input {
     position: relative;
     overflow: hidden;
     flex-shrink: 0;
-    border-radius: 14px;
 }
 
 .book-cover-img {
-    width: auto;
+    width: 100%;
     height: 100%;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    object-position: center;
+    object-fit: cover;
     transition: transform 0.3s ease;
     background: #f8f9fa;
-    display: block;
 }
 
 .book-card:hover .book-cover-img {
@@ -1834,23 +1553,15 @@ input {
     .stats-panel {
         grid-template-columns: repeat(2, 1fr);
     }
-
+    
     .books-grid {
         grid-template-columns: 1fr;
     }
-
+    
     .book-cover {
-        height: 170px;
-        max-height: 170px;
-        aspect-ratio: 3 / 4;
+        height: 200px; /* 行動裝置上稍微降低高度 */
     }
-
-    .book-cover-img {
-        width: auto;
-        height: 100%;
-        max-width: 100%;
-        object-fit: contain;
-    }
+    
 
     .form-actions {
         display: flex;
@@ -2171,16 +1882,7 @@ input {
     }
 
     .book-cover {
-        height: 170px;
-        max-height: 170px;
-        aspect-ratio: 3 / 4;
-    }
-
-    .book-cover-img {
-        width: auto;
-        height: 100%;
-        max-width: 100%;
-        object-fit: contain;
+        height: 180px;
     }
 
     .borrowed-fab {
@@ -3320,7 +3022,6 @@ input {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02);
     width: 100%;
     overflow: visible;
-    overflow-x: auto;
 }
 
 .series-header {
@@ -3392,200 +3093,12 @@ input {
 }
 
 .series-more-books {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 12px;
     margin-top: 20px;
     width: 100%;
     padding: 10px 0 20px 0;
-    overflow-x: auto;
-    overflow-y: visible;
-}
-
-.series-book-item {
-    display: grid;
-    grid-template-columns: 96px minmax(300px, 1fr) 260px;
-    gap: 18px;
-    align-items: center;
-    width: 100%;
-    min-width: 760px;
-    padding: 14px;
-    border-radius: 18px;
-    background: #ffffff;
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
-    box-sizing: border-box;
-    transition: all 0.2s ease;
-}
-
-.series-book-item:hover {
-    background: #f8f9fa;
-    border-color: #cbd5e0;
-    transform: translateX(4px);
-}
-
-.series-book-cover {
-    width: 96px;
-    height: 128px;
-    flex-shrink: 0;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #f8fafc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.series-book-cover img {
-    width: auto;
-    height: 100%;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    object-position: center;
-    display: block;
-}
-
-.series-book-info {
-    min-width: 0;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.series-book-title {
-    width: 100%;
-    margin: 0;
-    color: #1f2937;
-    font-size: 18px;
-    line-height: 1.45;
-    font-weight: 900;
-    writing-mode: horizontal-tb;
-    text-orientation: mixed;
-    white-space: normal;
-    word-break: normal;
-    overflow-wrap: anywhere;
-}
-
-.series-book-meta {
-    font-size: 0.85rem;
-    color: #718096;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    writing-mode: horizontal-tb;
-    white-space: normal;
-    word-break: normal;
-    overflow-wrap: anywhere;
-}
-
-.series-book-meta span {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    writing-mode: horizontal-tb;
-    white-space: normal;
-    word-break: normal;
-    overflow-wrap: anywhere;
-}
-
-.series-book-actions {
-    position: static;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    width: 260px;
-    min-width: 260px;
-    max-width: 260px;
-    align-items: center;
-    justify-content: end;
-}
-
-.series-book-actions button {
-    position: static;
-    width: 100%;
-    min-height: 40px;
-    border: none;
-    border-radius: 12px;
-    padding: 0 10px;
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 900;
-    cursor: pointer;
-    white-space: nowrap;
-    box-sizing: border-box;
-}
-
-.series-book-actions .btn-primary,
-.series-book-actions .btn-warning,
-.series-book-actions .btn-secondary {
-    background: linear-gradient(135deg, #6478e8, #4f5fd5);
-}
-
-.series-book-actions .series-copy-btn {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-}
-
-.series-book-actions .series-edit-btn {
-    background: linear-gradient(135deg, #3498db, #2c7be5);
-}
-
-.series-book-actions .series-delete-btn {
-    background: linear-gradient(135deg, #f97316, #ea580c);
-}
-
-.series-book-actions .btn {
-    padding: 8px 16px;
-    font-size: 0.85rem;
-}
-
-/* 手機版樣式 */
-@media (max-width: 768px) {
-    .series-book-item {
-        grid-template-columns: 86px minmax(0, 1fr);
-        gap: 12px;
-        padding: 12px;
-        align-items: start;
-    }
-
-    .series-book-cover {
-        width: 86px;
-        height: 116px;
-    }
-
-    .series-book-info {
-        width: 100%;
-    }
-
-    .series-book-title {
-        font-size: 16px;
-        line-height: 1.4;
-        white-space: normal;
-        overflow: visible;
-        text-overflow: unset;
-    }
-
-    .series-book-meta {
-        font-size: 13px;
-    }
-
-    .series-book-actions {
-        grid-column: 1 / -1;
-        width: 100%;
-        min-width: 0;
-        max-width: none;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-    }
-
-    .series-book-actions button {
-        width: 100%;
-        min-height: 40px;
-        font-size: 14px;
-        padding: 0 8px;
-    }
 }
 
 .series-expand-btn:hover {

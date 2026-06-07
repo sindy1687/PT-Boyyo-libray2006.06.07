@@ -1,7 +1,40 @@
+// ============================================================
+// doGet：支援 GET + ?payload=JSON 方式（手機 CORS 友善）
+// 手機瀏覽器發出 GET 請求時不會觸發 CORS preflight，
+// 因此可以繞過跨域限制，直接取得資料。
+// 部署時請選擇：
+//   執行身分 = 我（部署者）
+//   存取對象 = 任何人（含未登入使用者）
+// ============================================================
+function doGet(e) {
+  try {
+    const params = (e && e.parameter) || {};
+    const payloadStr = params.payload || '';
+    const req = payloadStr ? JSON.parse(payloadStr) : {};
+    return handleRequest_(req);
+  } catch (err) {
+    return json_({ ok: false, error: 'doGet error: ' + String(err && err.message ? err.message : err) });
+  }
+}
+
+// ============================================================
+// doPost：支援 POST + body JSON 方式（桌機 fallback 用）
+// ============================================================
 function doPost(e) {
   try {
     const bodyText = (e && e.postData && e.postData.contents) ? e.postData.contents : '';
     const req = bodyText ? JSON.parse(bodyText) : {};
+    return handleRequest_(req);
+  } catch (err) {
+    return json_({ ok: false, error: 'doPost error: ' + String(err && err.message ? err.message : err) });
+  }
+}
+
+// ============================================================
+// 統一請求處理（doGet / doPost 共用）
+// ============================================================
+function handleRequest_(req) {
+  try {
     const action = req.action;
 
     if (action === 'push') {
@@ -24,8 +57,8 @@ function doPost(e) {
 
       // 只更新借閱記錄，不更新書籍資料
       writeBorrowed_(borrowedBooks);
-      
-      // 可以在這裡記錄是哪個使用者更新的借閱記錄
+
+      // 記錄是哪個使用者更新的借閱記錄
       console.log('Borrowed books updated by user: ' + userId);
 
       return json_({ ok: true });
@@ -40,11 +73,25 @@ function doPost(e) {
       return json_({ ok: true, data });
     }
 
-    return json_({ ok: false, error: 'Unknown action' });
+    if (action === 'getVersion') {
+      // 回傳版本資訊（以目前書籍資料列數為版本依據）
+      const sh = getSheet_('Books');
+      const lastRow = sh.getLastRow();
+      const version = lastRow > 1
+        ? String(lastRow) + '_' + new Date().toISOString().split('T')[0]
+        : null;
+      return json_({ ok: true, data: { version } });
+    }
+
+    return json_({ ok: false, error: 'Unknown action: ' + String(action) });
   } catch (err) {
     return json_({ ok: false, error: String(err && err.message ? err.message : err) });
   }
 }
+
+// ============================================================
+// 工具函數
+// ============================================================
 
 function json_(obj) {
   return ContentService
@@ -97,13 +144,13 @@ function readBooks_() {
   const sh = getSheet_('Books');
   const lastRow = sh.getLastRow();
   const lastCol = sh.getLastColumn();
-  
+
   // 如果只有標題行或沒有資料，返回空陣列
   if (lastRow <= 1) return [];
-  
+
   // 明確指定讀取範圍，確保讀取所有資料
   const values = sh.getRange(1, 1, lastRow, lastCol).getValues();
-  
+
   const header = values[0];
   const idx = indexMap_(header);
 
