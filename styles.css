@@ -248,30 +248,32 @@ img, video, svg, canvas {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: calc(var(--toolbar-height) + 28px) 20px 20px;
 }
 
 /* 標題區域 */
 .header {
-    background: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, #6675df 0%, #9b59b6 100%);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    padding: 25px 35px;
+    padding: 35px 35px 25px;
+    margin-top: 8px;
     margin-bottom: 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 8px 32px rgba(102, 117, 223, 0.25), 0 0 0 1px rgba(102, 117, 223, 0.1);
 }
 
 .header h1 {
-    color: #4a5568;
+    color: #ffffff;
     font-size: 2rem;
     font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .header h1 i {
-    color: #667eea;
+    color: #ffffff;
     margin-right: 10px;
 }
 
@@ -674,17 +676,18 @@ input {
 }
 
 .stat-item {
-    background: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     backdrop-filter: blur(10px);
     border-radius: 15px;
     padding: 25px;
     text-align: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+    box-shadow: 0 8px 32px rgba(102, 117, 223, 0.15), 0 0 0 1px rgba(102, 117, 223, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .stat-item:hover {
     transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(102, 117, 223, 0.25), 0 0 0 1px rgba(102, 117, 223, 0.1);
 }
 
 .stat-number {
@@ -705,12 +708,12 @@ input {
 
 /* 書籍區域 */
 .books-section {
-    background: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     backdrop-filter: blur(10px);
     border-radius: 15px;
     padding: 25px;
     margin-bottom: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(102, 117, 223, 0.15), 0 0 0 1px rgba(102, 117, 223, 0.05);
 }
 
 .books-header {
@@ -723,7 +726,7 @@ input {
 }
 
 .books-header h2 {
-    color: #4a5568;
+    color: #6675df;
     font-size: 1.5rem;
 }
 
@@ -3591,4 +3594,259 @@ input {
 .series-expand-btn:hover {
     background: #667eea;
     color: white;
+}
+
+/* CSS 變數定義工具列高度 */
+:root {
+    --toolbar-height: 68px;
+}
+
+/* 固定工具列 */
+.toolbar-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.toolbar-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    height: var(--toolbar-height);
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+/* 紫色背景帶 */
+.toolbar-purple-bar {
+    height: 4px;
+    background: linear-gradient(90deg, #6675df 0%, #9b59b6 100%);
+}
+
+/* 搜尋區 */
+.toolbar-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.toolbar-search input {
+    width: 280px;
+    height: 40px;
+    padding: 0 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #f8fafc;
+    transition: all 0.2s;
+}
+
+.toolbar-search input:focus {
+    outline: none;
+    border-color: #6675df;
+    background: #ffffff;
+}
+
+.toolbar-search-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: #6675df;
+    color: #ffffff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toolbar-search-btn:hover {
+    background: #5564ce;
+}
+
+/* 分類和排序 */
+.toolbar-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.toolbar-filters select {
+    height: 40px;
+    padding: 0 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toolbar-filters select:focus {
+    outline: none;
+    border-color: #6675df;
+    background: #ffffff;
+}
+
+/* 視圖切換 */
+.toolbar-views {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.toolbar-view-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toolbar-view-btn:hover {
+    background: #e2e8f0;
+}
+
+.toolbar-view-btn.active {
+    background: #eef2ff;
+    border-color: #6675df;
+    color: #6675df;
+}
+
+/* 書籍類型切換 */
+.toolbar-book-type {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.toolbar-type-btn {
+    height: 40px;
+    padding: 0 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toolbar-type-btn:hover {
+    background: #e2e8f0;
+}
+
+.toolbar-type-btn.active {
+    background: #eef2ff;
+    border-color: #6675df;
+    color: #6675df;
+    border-bottom: 3px solid #6675df;
+}
+
+/* 登入/登出按鈕 */
+.toolbar-auth {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.toolbar-user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.toolbar-auth-btn {
+    height: 40px;
+    padding: 0 16px;
+    border: 2px solid #6675df;
+    border-radius: 8px;
+    background: #6675df;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toolbar-auth-btn:hover {
+    background: #5564ce;
+    border-color: #5564ce;
+}
+
+/* 手機版工具列 */
+@media (max-width: 600px) {
+    :root {
+        --toolbar-height: 64px;
+    }
+
+    .toolbar-content {
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .toolbar-search input {
+        width: 180px;
+        height: 36px;
+        font-size: 13px;
+    }
+
+    .toolbar-search-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .toolbar-filters select {
+        height: 36px;
+        padding: 0 10px;
+        font-size: 13px;
+    }
+
+    .toolbar-view-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .toolbar-type-btn {
+        height: 36px;
+        padding: 0 12px;
+        font-size: 13px;
+    }
+
+    .toolbar-user-name {
+        font-size: 13px;
+    }
+
+    .toolbar-auth-btn {
+        height: 36px;
+        padding: 0 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: calc(var(--toolbar-height) + 20px) 12px 12px;
+    }
+
+    .header {
+        margin-top: 4px;
+    }
 }

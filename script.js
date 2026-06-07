@@ -3887,6 +3887,9 @@ class LibrarySystem {
     switchBookType(type) {
         this.currentBookType = type;
 
+        // 切換書籍類型時重設頁碼
+        this.currentPage = 1;
+
         // 更新按鈕狀態
         document.getElementById('tab-series').classList.toggle('active', type === 'series');
         document.getElementById('tab-standalone').classList.toggle('active', type === 'standalone');

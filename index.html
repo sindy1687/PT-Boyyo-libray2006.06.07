@@ -582,8 +582,6 @@
             <h1><i class="fas fa-book"></i> 博幼圖書館管理系統</h1>
             <div class="user-info">
                 <span id="current-user">訪客</span>
-                <button id="login-btn" class="btn btn-outline">登入</button>
-                <button id="logout-btn" class="btn btn-outline" style="display: none;">登出</button>
             </div>
         </header>
 
@@ -622,7 +620,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="admin-section">
                 <button id="boyou-books-btn" class="btn btn-primary">
                     <i class="fas fa-book-reader"></i> 博幼藏書
@@ -676,6 +674,68 @@
             </div>
         </div>
 
+        <!-- 固定工具列 -->
+        <div class="toolbar-fixed">
+            <div class="toolbar-content">
+                <!-- 搜尋區 -->
+                <div class="toolbar-search">
+                    <input type="text" id="search-input" placeholder="搜尋書名、書碼、年份、類別...">
+                    <button id="search-btn" class="toolbar-search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                <!-- 分類和排序 -->
+                <div class="toolbar-filters">
+                    <select id="genre-filter">
+                        <option value="">全部類別</option>
+                        <option value="繪本">繪本 (A)</option>
+                        <option value="橋梁書">橋梁書 (B)</option>
+                        <option value="文字書">文字書 (C)</option>
+                    </select>
+                    <select id="sort-by">
+                        <option value="title">按書名排序</option>
+                        <option value="code">按書碼排序</option>
+                        <option value="year">按年份排序</option>
+                        <option value="genre">按類別排序</option>
+                    </select>
+                    <select id="sort-order">
+                        <option value="asc">升冪</option>
+                        <option value="desc">降冪</option>
+                    </select>
+                </div>
+
+                <!-- 視圖切換 -->
+                <div class="toolbar-views">
+                    <button id="grid-view" class="toolbar-view-btn active" title="網格視圖">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button id="list-view" class="toolbar-view-btn" title="列表視圖">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+
+                <!-- 書籍類型切換 -->
+                <div class="toolbar-book-type">
+                    <button id="tab-series" class="toolbar-type-btn active" onclick="library.switchBookType('series')">
+                        <i class="fas fa-layer-group"></i> 系列書
+                    </button>
+                    <button id="tab-standalone" class="toolbar-type-btn" onclick="library.switchBookType('standalone')">
+                        <i class="fas fa-book"></i> 單本書
+                    </button>
+                </div>
+
+                <!-- 登入/登出按鈕 -->
+                <div class="toolbar-auth">
+                    <span id="current-user" class="toolbar-user-name">訪客</span>
+                    <button id="login-btn" class="toolbar-auth-btn">登入</button>
+                    <button id="logout-btn" class="toolbar-auth-btn" style="display: none;">登出</button>
+                </div>
+            </div>
+            <!-- 紫色背景帶 -->
+            <div class="toolbar-purple-bar"></div>
+        </div>
+
         <!-- 統計資訊 -->
         <div class="stats-panel">
             <div class="stat-item">
@@ -707,36 +767,10 @@
             </div>
         </div>
 
-        <!-- 搜尋：移到自動更新顯示提醒下面 -->
-        <div class="search-section" style="margin-top: 12px;">
-            <div class="search-bar">
-                <input type="text" id="search-input" placeholder="搜尋書名、書碼、年份、類別...">
-                <button id="search-btn" class="btn btn-primary">
-                    <i class="fas fa-search"></i>
-                </button>
-            </div>
-        </div>
-
         <!-- 書籍列表 -->
         <div class="books-section">
             <div class="books-header">
                 <h2><i class="fas fa-book"></i> 館藏列表</h2>
-                <div class="view-controls">
-                    <button id="grid-view" class="view-btn active" title="網格視圖">
-                        <i class="fas fa-th"></i>
-                    </button>
-                    <button id="list-view" class="view-btn" title="列表視圖">
-                        <i class="fas fa-list"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="book-type-tabs">
-                <button id="tab-series" class="tab-btn active" onclick="library.switchBookType('series')">
-                    <i class="fas fa-layer-group"></i> 系列書
-                </button>
-                <button id="tab-standalone" class="tab-btn" onclick="library.switchBookType('standalone')">
-                    <i class="fas fa-book"></i> 單本書
-                </button>
             </div>
             <div class="books-view-area">
                 <div id="gridView" class="grid-view books-grid">
